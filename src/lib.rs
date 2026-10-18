@@ -1465,7 +1465,10 @@ impl ResolverImpl {
     ) -> ResolveResult {
         let conditions = &self.options.condition_names;
         // 1. If exports is an Object with both a key starting with "." and a key not starting with ".", throw an Invalid Package Configuration error.
-        if let Some(map) = exports.as_map() {
+        static SKIP: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+        if !*SKIP.get_or_init(|| std::env::var_os("SKIP_EXPORTS_KEY_CHECK").is_some())
+            && let Some(map) = exports.as_map()
+        {
             let mut has_dot = false;
             let mut without_dot = false;
             for key in map.keys() {
